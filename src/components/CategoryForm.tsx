@@ -7,19 +7,56 @@ export default function CategoryForm({ onCreated }: { onCreated: (c: Category) =
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
 
+  const [guardando, setGuardando] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
+    
     e.preventDefault();
-    const nueva = await createCategory({ codigo, nombre, descripcion });
-    onCreated(nueva);
-    setCodigo(""); setNombre(""); setDescripcion("");
+
+    if (!codigo.trim() || !nombre.trim()) return;
+    setGuardando(true);
+
+
+    try {
+    const nuevaCategoria: Category = {codigo, nombre, descripcion};
+      const creada = await createCategory(nuevaCategoria);
+      onCreated(creada); // refresca lista en el padre
+      setCodigo(""); setNombre(""); setDescripcion("");
+      console.log("ENVIANDO UNA SOLA VEZ", nuevaCategoria);
+    } catch (err) {
+      console.error("Error creando categoría", err);
+    } finally {
+      setGuardando(false);
+    }
+
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Código" />
-      <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre" />
-      <input value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Descripción" />
-      <button type="submit">Crear Categoría</button>
-    </form>
+    <div className="card mt-4">
+      <div className="card-header bg-primary text-white fw-bold">
+        Nueva Categoría
+      </div>
+
+      <div className="card-body">
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label htmlFor="codigo" className="form-label">Código</label>
+            <input type="text" className="form-control w-50" value={codigo} onChange={(e) => setCodigo(e.target.value)} id="codigo" />
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="nombre" className="form-label">Nombre</label>
+            <input type="text" className="form-control w-50" value={nombre} onChange={(e) => setNombre(e.target.value)} id="nombre" />
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="descripcion" className="form-label">Descripción</label>
+            <textarea className="form-control w-50" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} id="descripcion" rows={3}></textarea>
+          </div>
+
+          <button type="submit" className="btn btn-dark" disabled={guardando || !codigo.trim() || !nombre.trim()}>Crear Categoría</button>
+        </form>
+      </div>
+    </div>
   );
 }
